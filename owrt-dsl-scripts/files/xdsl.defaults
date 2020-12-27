@@ -1,0 +1,47 @@
+#!/bin/sh
+
+. /lib/functions/uci-defaults.sh
+. /lib/functions/lantiq.sh
+
+set_atm_wan() {
+        local vpi=$1
+        local vci=$2
+        local encaps=$3
+        local payload=$4
+        local qos=$5
+        uci batch <<EOF
+set network.atm='atm-bridge'
+set network.atm.unit='0'
+set network.atm.atmdev='0'
+set network.atm.vpi='$vpi'
+set network.atm.vci='$vci'
+set network.atm.encaps='$encaps'
+set network.atm.payload='$payload'
+set network.atm.qos='$qos'
+set network.wan='interface'
+set network.wan.ifname='nas0'
+set network.wan.proto='pppoe'
+set network.wan.username='admin'
+set network.wan.password='admin'
+set network.wan.rps='0'
+set network.wan.xps='0'
+EOF
+}
+
+vpi=0
+vci=32
+encaps="llc"
+payload="bridged"
+qos="UBR,aal5:"
+
+case "$board" in
+K3C*|BLUECAVE*)
+	exit 0
+	;;
+esac
+
+set_atm_wan "$vpi" "$vci" "$encaps" "$payload" "$qos"
+
+uci commit network
+
+exit 0
